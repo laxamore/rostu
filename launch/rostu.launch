@@ -1,0 +1,3 @@
+<launch>
+    <node pkg="rostu" type="computer_vision.py" name="camera_calibration" />
+</launch>
