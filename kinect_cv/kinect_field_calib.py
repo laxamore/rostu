@@ -14,7 +14,7 @@ rate = rospy.Rate(30)  # 30 hz refresh rate
 def nothing(x):
     pass
 
-file = open(os.getenv("HOME") + "/catkin_ws/src/rostu/data/kinect_ball_kalibrasi.txt", "r")
+file = open(os.getenv("HOME") + "/catkin_ws/src/rostu/data/kinect_field_kalibrasi.txt", "r")
 readedFile = file.read()
 file.close()
 
@@ -187,7 +187,7 @@ while not rospy.is_shutdown():
 
     saveFile = str(lower[0]) + "," + str(lower[1]) + "," + str(lower[2]) + "," + \
                     str(upper[0]) + "," + str(upper[1]) + "," + str(upper[2]) + ";"
-    file = open(os.getenv("HOME") + "/catkin_ws/src/rostu/data/kinect_ball_kalibrasi.txt", "w")
+    file = open(os.getenv("HOME") + "/catkin_ws/src/rostu/data/kinect_field_kalibrasi.txt", "w")
     file.write(saveFile)
     file.close()
 

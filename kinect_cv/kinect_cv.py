@@ -4,6 +4,7 @@ import numpy as np
 import cv2
 import rospy
 import math
+import os
 
 from rostu.msg import frontCameraDetection
 from sensor_msgs.msg import Image
@@ -25,7 +26,7 @@ upper = []
 mask = [None, None, None]
 
 for i in range(len(file_kalibrasi)):
-    file = open("/root/catkin_ws/src/rostu/data/" + file_kalibrasi[i], "r")
+    file = open(os.getenv("HOME") + "/catkin_ws/src/rostu/data/" + file_kalibrasi[i], "r")
     readedFile.append(file.read())
     file.close()
     ff.append(["", "", "", "", "", ""])
@@ -50,6 +51,7 @@ ballCoor = frontCameraDetection()
 def callback_qhd_img_color(msg):
     try:
         img = bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
+	img = cv2.resize(img, (512, 424))
     except CvBridgeError as e:
         print(e)
 
@@ -160,6 +162,6 @@ def callback_qhd_img_color(msg):
         rospy.signal_shutdown("exit")
 
 
-sub = rospy.Subscriber('/kinect2/sd/image_color_rect', Image, callback_qhd_img_color)
+sub = rospy.Subscriber('/kinect2/qhd/image_color', Image, callback_qhd_img_color)
 
 rospy.spin()
