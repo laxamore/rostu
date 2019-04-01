@@ -250,14 +250,14 @@ int main(int argc, char* argv[]) {
   ros::Subscriber sub4 = nh.subscribe("rostu/kicker", 1, kicker_callback);
   ros::Subscriber sub5 = nh.subscribe("amcl_pose", 1, amcl_pose_callback);
   ros::Subscriber sub6 = nh.subscribe("move_base/status", 1, move_base_status_callback);
-  ros::Subscriber sub7 = nh.subscribe("rostu/gs/referee_command", 1, referee_command_callback);
+  ros::Subscriber sub7 = nh.subscribe("/rostu/gs/referee_command", 1, referee_command_callback);
   ros::Publisher nav_odom = nh.advertise<nav_msgs::Odometry>("odom", 1);
   ros::Publisher cmd_vel = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
   ros::Publisher rostu_vel = nh.advertise<geometry_msgs::Twist>("rostu/cmd_vel", 1);
   ros::Publisher dribling_pub = nh.advertise<rostu_v2::Dribling>("rostu/dribling", 1);
   ros::Publisher kicker_pub = nh.advertise<rostu_v2::Kicker>("rostu/kicker", 1);
-  cancel_goal_pub = nh.advertise<actionlib_msgs::GoalID>("/move_base/cancel", 1);
-  publish_goal = nh.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1);
+  cancel_goal_pub = nh.advertise<actionlib_msgs::GoalID>("move_base/cancel", 1);
+  publish_goal = nh.advertise<geometry_msgs::PoseStamped>("move_base_simple/goal", 1);
 
   ros::Rate r(30);
 
@@ -293,6 +293,7 @@ int main(int argc, char* argv[]) {
     dt = (current_time - last_time).toSec();
 
     if (referee_command == "S") { //Robot Stop Or Dropball
+      lastGoalPosX = 0; lastGoalPosY = 0; lastGoalPosZ = 0; lastGoalPosW = 0;
       cancel_goal_pub.publish(cancel_goal_msg);
       kicker_msg.kick_pwm = 0;
       cmdvel.linear.x = 0;
@@ -549,7 +550,12 @@ int main(int argc, char* argv[]) {
       }
       else if(waitDelayCondition) {
         if (enemy_kickoff) {
-          publish_goal_pos(4.47390794754, 3.27618312836, 0.256563103513, 0.966527482235);
+          if (robot_team == "C") {
+            publish_goal_pos(4.47390794754, 3.27618312836, 0.256563103513, 0.966527482235);
+          }
+          else if (robot_team == "M") {
+            publish_goal_pos(6.026092032, 3.27618312836, 0.966527482235, 0.256563103513);
+          }
           enemy_kickoff = false;
         }
 
@@ -564,7 +570,6 @@ int main(int argc, char* argv[]) {
       }
 
       if (startGame) {
-        lastGoalPosX = 0; lastGoalPosY = 0; lastGoalPosZ = 0; lastGoalPosW = 0;
         if (got_ball && robot_status != 1) {
           if (robot_kickoff) {
             dribling.d1pwm1 = 0;
@@ -621,6 +626,7 @@ int main(int argc, char* argv[]) {
           cmd_vel.publish(cmdvel);
         }
         else if (ball_detect && robot_status != 1) {
+          lastGoalPosX = 0; lastGoalPosY = 0; lastGoalPosZ = 0; lastGoalPosW = 0;
           double output = PD_Controller(ball_angle_from_frame);
 
           if (output > 0 ) {
@@ -797,3 +803,4 @@ int main(int argc, char* argv[]) {
 
   return 0;
 }
+
