@@ -23,13 +23,10 @@
 		<rosparam file="$(find rostu_v2)/cfg/omnidir/local_costmap_params.yaml" command="load" />
 		<rosparam file="$(find rostu_v2)/cfg/omnidir/global_costmap_params.yaml" command="load" />
 		<rosparam file="$(find rostu_v2)/cfg/omnidir/teb_local_planner_params.yaml" command="load" />
-		<!-- <rosparam file="$(find rostu_v2)/cfg/omnidir/eband_local_planner_params.yaml" command="load" /> -->
 
 		<param name="base_global_planner" value="global_planner/GlobalPlanner" />
 		<param name="planner_frequency" value="1.0" />
 		<param name="planner_patience" value="5.0" />
-
-		<!-- <param name="base_local_planner" value="eband_local_planner/EBandPlannerROS" /> -->
 
 		<param name="base_local_planner" value="teb_local_planner/TebLocalPlannerROS" />
 		<param name="controller_frequency" value="20.0" />
@@ -49,6 +46,4 @@
 	<node name="map_server" pkg="map_server" type="map_server" args="$(find rostu_v2)/maps/field.yaml" output="screen">
 		<param name="frame_id" value="/map"/>
 	</node>
-
-	<!-- <node name="rviz" pkg="rviz" type="rviz" args="-d $(find rostu_v2)/cfg/rviz_navigation_teb.rviz"/> -->
 </launch>
