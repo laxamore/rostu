@@ -5,12 +5,18 @@
 #include <arpa/inet.h>
 
 #include <ros/ros.h>
+#include <ros/package.h>
+#include <yaml-cpp/yaml.h>
+
 #include <std_msgs/String.h>
 
 using namespace std;
 
+string path = ros::package::getPath("rostu_gs");
+YAML::Node host_ip = YAML::LoadFile(path + "/cfg/rostu/host_ip.yaml");
+
 int PORT = 28097;
-string HOST = "10.42.0.20";
+string HOST = host_ip["host_ip"].as<string>();
 
 int sock = socket(AF_INET, SOCK_STREAM, 0);
 
