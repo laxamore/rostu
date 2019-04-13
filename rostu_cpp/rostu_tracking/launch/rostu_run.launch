@@ -1,7 +1,0 @@
-<launch>
-    <include file="$(find kinect2_bridge)/launch/kinect2_bridge.launch">
-      <arg name="depth_method" value="opencl"/>
-    </include>
-
-  	<node pkg="rostu_tracking" type="rostu_tracking" args="viewer" name="rostu_tracking" output="screen" />
-</launch>
