@@ -5,6 +5,7 @@
 
 #include <ros/ros.h>
 #include <ros/package.h>
+#include <yaml-cpp/yaml.h>
 
 #include <tf/transform_broadcaster.h>
 #include <nav_msgs/Odometry.h>
@@ -15,6 +16,8 @@
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/Quaternion.h>
 #include <geometry_msgs/Vector3.h>
+#include <std_msgs/Int8.h>
+#include <std_msgs/Int16MultiArray.h>
 
 # define PI 3.14159265358979323846
 
@@ -22,6 +25,7 @@ using namespace std;
 using namespace cv;
 
 string path = ros::package::getPath("rostu_simulation");
+YAML::Node calibration_data = YAML::LoadFile(path + "/cfg/rostu/map_adjustment.yaml");
 
 int posX = 140, posY = 560, degree = 90;
 double pX = 140.0, pY = 560.0, deg = 90.0;
@@ -35,12 +39,25 @@ double th;
 
 double vx;
 double vy;
+double vx_mul;
+double vy_mul;
 double vth;
 
 double dt;
 double delta_x;
 double delta_y;
 double delta_th;
+
+int scan_resize_value = calibration_data["scanning_matching_adjustment"].as<int>();
+
+void resize_frame_callback(const std_msgs::Int8& msg) {
+  scan_resize_value = msg.data;
+}
+
+void vel_mul_callback(const std_msgs::Int16MultiArray& msg) {
+  vx_mul = float(msg.data[0]) / float(500);
+  vy_mul = float(msg.data[1]) / float(500);
+}
 
 static void leftClick( int event, int x, int y, int, void* ) {
   if (event == EVENT_LBUTTONDOWN) {
@@ -67,8 +84,8 @@ void cmd_vel_callback(const geometry_msgs::Twist& msg) {
   delta_y = (vx * sin(th) + vy * cos(th)) * dt;
   delta_th = vth * dt;
 
-  x += delta_x;
-  y += delta_y;
+  x += delta_x * vx_mul;
+  y += delta_y * vy_mul;
   th += delta_th;
 
   pX += (sinHeading * (vx / 0.5 / 0.280898876) + cosHeading * (vy / 0.5 / 0.280898876)) * 0.33;
@@ -112,6 +129,8 @@ int main(int argc, char **argv) {
   ros::init(argc, argv, "rostu_simulation");
   ros::NodeHandle nh;
   ros::Subscriber sub = nh.subscribe("cmd_vel", 1, cmd_vel_callback);
+  ros::Subscriber sub2 = nh.subscribe("rostu/camera/resize_frame", 1, resize_frame_callback);
+  ros::Subscriber sub3 = nh.subscribe("vel_mul", 1, vel_mul_callback);
   ros::Publisher scanPub = nh.advertise<sensor_msgs::LaserScan>("scan", 1);
   ros::Publisher obstaclePub = nh.advertise<sensor_msgs::LaserScan>("obstacle_scan", 1);
   ros::Publisher nav_odom = nh.advertise<nav_msgs::Odometry>("odom", 1);
@@ -182,7 +201,7 @@ int main(int argc, char **argv) {
     double sinHeading = sin(heading * 2 * PI / 360);
 
     field = imread(path + "/model/field/field.png", CV_LOAD_IMAGE_COLOR);
-    resize(field, field, Size(712,712));
+    resize(field, field, Size(field.cols / 4, field.rows / 4));
 
     // Drawing Robot
     circle(field, Point(posX, posY), 20, Scalar(255, 0, 0), -1);
@@ -240,7 +259,7 @@ int main(int argc, char **argv) {
     }
 
     for (int i = 0; i < distanceNAngle.size(); i++) {
-      lineScan.ranges[int(distanceNAngle[i][1])] = distanceNAngle[i][0] * 0.05 * 0.280898876;
+      lineScan.ranges[int(distanceNAngle[i][1])] = distanceNAngle[i][0] * float(scan_resize_value) / float(1000);
     }
 
     inRange(cropped_img, Scalar(80, 80, 80), Scalar(110, 110, 110), mask_obstacle);

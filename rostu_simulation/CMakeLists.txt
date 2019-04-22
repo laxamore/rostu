@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(rostu_simulation)
 
-## add_compile_options(-std=c++11)
+# add_compile_options(-std=c++11)
 
 find_package(catkin REQUIRED COMPONENTS
   genmsg
@@ -14,7 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib
 )
 
-find_package(OpenCV)
+find_package(OpenCV REQUIRED)
 find_package(gazebo)
 
 ################################################
@@ -43,14 +43,25 @@ include_directories(
 )
 
 add_executable(field src/field.cpp)
-add_executable(goal_call src/goal_call.cpp)
+add_executable(rostu_simulation_scan_adj src/scanning_matching_adjustment.cpp)
+add_executable(rostu_simulation_vel_mul src/vel_mul.cpp)
 
 target_link_libraries(field
- ${catkin_LIBRARIES}
- ${OpenCV_LIBRARIES}
- ${gazebo_LIBRARIES}
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+  ${gazebo_LIBRARIES}
+  yaml-cpp
 )
 
-target_link_libraries(goal_call
- ${catkin_LIBRARIES}
+target_link_libraries(rostu_simulation_scan_adj
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+  ${gazebo_LIBRARIES}
+  yaml-cpp
+)
+
+target_link_libraries(rostu_simulation_vel_mul
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+  yaml-cpp
 )
