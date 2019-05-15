@@ -26,6 +26,7 @@ using namespace cv;
 
 string path = ros::package::getPath("rostu_simulation");
 YAML::Node calibration_data = YAML::LoadFile(path + "/cfg/rostu/map_adjustment.yaml");
+YAML::Node speed_mul = YAML::LoadFile(path + "/cfg/rostu/speed_mul.yaml");
 
 int posX = 140, posY = 560, degree = 90;
 double pX = 140.0, pY = 560.0, deg = 90.0;
@@ -39,9 +40,9 @@ double th;
 
 double vx;
 double vy;
-double vx_mul;
-double vy_mul;
 double vth;
+double vx_mul = float(speed_mul["x_speed_mul"].as<int>()) / float(100);
+double vy_mul = float(speed_mul["y_speed_mul"].as<int>()) / float(100);
 
 double dt;
 double delta_x;
@@ -55,8 +56,8 @@ void resize_frame_callback(const std_msgs::Int8& msg) {
 }
 
 void vel_mul_callback(const std_msgs::Int16MultiArray& msg) {
-  vx_mul = float(msg.data[0]) / float(500);
-  vy_mul = float(msg.data[1]) / float(500);
+  vx_mul = float(msg.data[0]) / float(100);
+  vy_mul = float(msg.data[1]) / float(100);
 }
 
 static void leftClick( int event, int x, int y, int, void* ) {
@@ -76,21 +77,24 @@ void cmd_vel_callback(const geometry_msgs::Twist& msg) {
   double cosHeading = cos(heading * 2 * PI / 360);
   double sinHeading = sin(heading * 2 * PI / 360);
 
-  vx = msg.linear.x;
-  vy = msg.linear.y;
+  vx = msg.linear.x * 0.5;
+  vy = msg.linear.y * 0.5;
   vth = msg.angular.z;
 
   delta_x = (vx * cos(th) - vy * sin(th)) * dt;
   delta_y = (vx * sin(th) + vy * cos(th)) * dt;
   delta_th = vth * dt;
 
-  x += delta_x * vx_mul;
-  y += delta_y * vy_mul;
+  // pX += (sinHeading * (vx / 0.5 / 0.280898876) + cosHeading * (vy / 0.5 / 0.280898876)) * 0.33;
+  // pY += (cosHeading * (vx / 0.5 / 0.280898876) - sinHeading * (vy / 0.5 / 0.280898876)) * 0.33;
+
+  pX += ((vx * sinHeading + vy * cosHeading) * dt) * 100;
+  pY += ((vx * cosHeading - vy * sinHeading) * dt) * 100;
+
+  x += delta_x;
+  y += delta_y;
   th += delta_th;
-
-  pX += (sinHeading * (vx / 0.5 / 0.280898876) + cosHeading * (vy / 0.5 / 0.280898876)) * 0.33;
-  pY += (cosHeading * (vx / 0.5 / 0.280898876) - sinHeading * (vy / 0.5 / 0.280898876)) * 0.33;
-
+  
   posX = int(pX);
   posY = int(pY);
 

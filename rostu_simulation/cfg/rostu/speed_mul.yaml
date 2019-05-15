@@ -1,3 +1,2 @@
-y_speed_mul: 65
-x_speed_mul: 65
-w_speed_mul: 250
+y_speed_mul: 100
+x_speed_mul: 100
