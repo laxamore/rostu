@@ -20,8 +20,8 @@
 
     <param name="odom_model_type"		value="omni"/>
 
-    <param name="initial_pose_x"            value="2"/>
-		<param name="initial_pose_y"            value="2"/>
+    <param name="initial_pose_x"            value="0"/>
+		<param name="initial_pose_y"            value="0"/>
 		<param name="initial_pose_a"            value="0"/>
 	</node>
 
@@ -29,5 +29,6 @@
 		<param name="frame_id" value="/map"/>
 	</node>
 
-	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find rostu_simulation)/cfg/rviz_navigation_teb.rviz"/>
+	<node name="rostu_gui" pkg="rostu_gui" type="rostuUi.py" />
+	<!-- <node name="rviz" pkg="rviz" type="rviz" args="-d $(find rostu_simulation)/cfg/rviz_navigation_teb.rviz"/> -->
 </launch>
