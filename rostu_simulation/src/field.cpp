@@ -26,7 +26,8 @@ using namespace cv;
 
 string path = ros::package::getPath("rostu_simulation");
 YAML::Node calibration_data = YAML::LoadFile(path + "/cfg/rostu/map_adjustment.yaml");
-YAML::Node speed_mul = YAML::LoadFile(path + "/cfg/rostu/speed_mul.yaml");
+YAML::Node odom_adj = YAML::LoadFile(path + "/cfg/rostu/odom_adj.yaml");
+YAML::Node robot_speed = YAML::LoadFile(path + "/cfg/rostu/robot_speed.yaml");
 
 int posX = 140, posY = 560, degree = 90;
 double pX = 140.0, pY = 560.0, deg = 90.0;
@@ -34,15 +35,26 @@ bool spawn = false;
 
 int obstaclePosX = 0, obstaclePosY = 0;
 
-double x;
-double y;
-double th;
 
 double vx;
 double vy;
 double vth;
-double vx_mul = float(speed_mul["x_speed_mul"].as<int>()) / float(100);
-double vy_mul = float(speed_mul["y_speed_mul"].as<int>()) / float(100);
+
+double vx_speed = float(robot_speed["x_robot_speed"].as<int>()) / float(100);
+double vy_speed = float(robot_speed["y_robot_speed"].as<int>()) / float(100);
+double vth_speed = float(robot_speed["th_robot_speed"].as<int>()) / float(100);
+
+double odom_x;
+double odom_y;
+double odom_th;
+
+double odom_vx;
+double odom_vy;
+double odom_vth;
+
+double vx_odom_adj = float(odom_adj["x_odom_adj"].as<int>()) / float(100);
+double vy_odom_adj = float(odom_adj["y_odom_adj"].as<int>()) / float(100);
+double vth_odom_adj = float(odom_adj["th_odom_adj"].as<int>()) / float(100);
 
 double dt;
 double delta_x;
@@ -55,9 +67,16 @@ void resize_frame_callback(const std_msgs::Int8& msg) {
   scan_resize_value = msg.data;
 }
 
-void vel_mul_callback(const std_msgs::Int16MultiArray& msg) {
-  vx_mul = float(msg.data[0]) / float(100);
-  vy_mul = float(msg.data[1]) / float(100);
+void odom_adj_callback(const std_msgs::Int16MultiArray& msg) {
+  vx_odom_adj = float(msg.data[0]) / float(100);
+  vy_odom_adj = float(msg.data[1]) / float(100);
+  vth_odom_adj = float(msg.data[2]) / float(100);
+}
+
+void robot_speed_callback(const std_msgs::Int16MultiArray& msg) {
+  vx_speed = float(msg.data[0]) / float(100);
+  vy_speed = float(msg.data[1]) / float(100);
+  vth_speed = float(msg.data[2]) / float(100);
 }
 
 static void leftClick( int event, int x, int y, int, void* ) {
@@ -77,23 +96,24 @@ void cmd_vel_callback(const geometry_msgs::Twist& msg) {
   double cosHeading = cos(heading * 2 * PI / 360);
   double sinHeading = sin(heading * 2 * PI / 360);
 
-  vx = msg.linear.x * 0.5;
-  vy = msg.linear.y * 0.5;
-  vth = msg.angular.z;
+  vx = msg.linear.x * vx_speed;
+  vy = msg.linear.y * vy_speed;
+  vth = msg.angular.z * vth_speed;
 
-  delta_x = (vx * cos(th) - vy * sin(th)) * dt;
-  delta_y = (vx * sin(th) + vy * cos(th)) * dt;
+  odom_vx = msg.linear.x * vx_odom_adj;
+  odom_vy = msg.linear.y * vy_odom_adj;
+  odom_vth = msg.angular.z * vth_odom_adj;
+
+  delta_x = (vx * cos(odom_th) - vy * sin(odom_th)) * dt;
+  delta_y = (vx * sin(odom_th) + vy * cos(odom_th)) * dt;
   delta_th = vth * dt;
-
-  // pX += (sinHeading * (vx / 0.5 / 0.280898876) + cosHeading * (vy / 0.5 / 0.280898876)) * 0.33;
-  // pY += (cosHeading * (vx / 0.5 / 0.280898876) - sinHeading * (vy / 0.5 / 0.280898876)) * 0.33;
 
   pX += ((vx * sinHeading + vy * cosHeading) * dt) * 100;
   pY += ((vx * cosHeading - vy * sinHeading) * dt) * 100;
 
-  x += delta_x;
-  y += delta_y;
-  th += delta_th;
+  odom_x += delta_x;
+  odom_y += delta_y;
+  odom_th += delta_th;
   
   posX = int(pX);
   posY = int(pY);
@@ -108,9 +128,6 @@ void cmd_vel_callback(const geometry_msgs::Twist& msg) {
 }
 
 vector<double> findDistanceNAngle(int x1, int y1, int x2, int y2, double sinH, double cosH) {
-  // x2 += 15;
-  // y2 -= 5;
-
   double dis1 = sqrt(pow((x2 - x1), 2) + pow((y2 - y1), 2));
   double dis2 = sqrt(pow(((x1 + int(sinH * 20)) - x1), 2) + pow(((y1 + int(cosH * 20)) - y1), 2));
   double dis3 = sqrt(pow((x2 - (x1 + int(sinH * 20))), 2) + pow((y2 - (y1 + int(cosH * 20))), 2));
@@ -134,7 +151,8 @@ int main(int argc, char **argv) {
   ros::NodeHandle nh;
   ros::Subscriber sub = nh.subscribe("cmd_vel", 1, cmd_vel_callback);
   ros::Subscriber sub2 = nh.subscribe("rostu/camera/resize_frame", 1, resize_frame_callback);
-  ros::Subscriber sub3 = nh.subscribe("vel_mul", 1, vel_mul_callback);
+  ros::Subscriber sub3 = nh.subscribe("odom_adj", 1, odom_adj_callback);
+  ros::Subscriber sub4 = nh.subscribe("robot_speed", 1, robot_speed_callback);
   ros::Publisher scanPub = nh.advertise<sensor_msgs::LaserScan>("scan", 1);
   ros::Publisher obstaclePub = nh.advertise<sensor_msgs::LaserScan>("obstacle_scan", 1);
   ros::Publisher nav_odom = nh.advertise<nav_msgs::Odometry>("odom", 1);
@@ -145,9 +163,9 @@ int main(int argc, char **argv) {
   tf::TransformBroadcaster bl_broadcaster;
   tf::TransformBroadcaster bf_broadcaster;
 
-  x = 0.0;
-  y = 0.0;
-  th = 0.0;
+  odom_x = 0.0;
+  odom_y = 0.0;
+  odom_th = 0.0;
 
   ros::Time current_time, last_time;
   current_time = ros::Time::now();
@@ -291,7 +309,7 @@ int main(int argc, char **argv) {
       obstacleScan.ranges[int(distanceNAngle_obstacle[i][1])] = distanceNAngle_obstacle[i][0] * 0.05 * 0.280898876;
     }
 
-    geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(th);
+    geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(odom_th);
 
     geometry_msgs::TransformStamped bll_trans;
     bll_trans.header.stamp = current_time;
@@ -320,8 +338,8 @@ int main(int argc, char **argv) {
     bf_trans.header.frame_id = "odom";
     bf_trans.child_frame_id = "base_footprint";
 
-    bf_trans.transform.translation.x = x;
-    bf_trans.transform.translation.y = y;
+    bf_trans.transform.translation.x = odom_x;
+    bf_trans.transform.translation.y = odom_y;
     bf_trans.transform.translation.z = 0.0;
     bf_trans.transform.rotation = odom_quat;
     bf_broadcaster.sendTransform(bf_trans);
@@ -330,15 +348,15 @@ int main(int argc, char **argv) {
     odom.header.stamp = current_time;
     odom.header.frame_id = "odom";
 
-    odom.pose.pose.position.x = x;
-    odom.pose.pose.position.y = y;
+    odom.pose.pose.position.x = odom_x;
+    odom.pose.pose.position.y = odom_y;
     odom.pose.pose.position.z = 0.0;
     odom.pose.pose.orientation = odom_quat;
 
     odom.child_frame_id = "";
-    odom.twist.twist.linear.x = vx;
-    odom.twist.twist.linear.y = vy;
-    odom.twist.twist.angular.z = vth;
+    odom.twist.twist.linear.x = odom_vx;
+    odom.twist.twist.linear.y = odom_vy;
+    odom.twist.twist.angular.z = odom_vth;
 
     imshow("field", field);
     // imshow("mask", mask);

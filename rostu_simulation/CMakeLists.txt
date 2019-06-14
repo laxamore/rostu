@@ -44,7 +44,8 @@ include_directories(
 
 add_executable(field src/field.cpp)
 add_executable(rostu_simulation_scan_adj src/scanning_matching_adjustment.cpp)
-add_executable(rostu_simulation_vel_mul src/vel_mul.cpp)
+add_executable(rostu_simulation_odom_adj src/odom_adj.cpp)
+add_executable(rostu_simulation_robot_speed src/robot_speed.cpp)
 
 target_link_libraries(field
   ${catkin_LIBRARIES}
@@ -60,7 +61,13 @@ target_link_libraries(rostu_simulation_scan_adj
   yaml-cpp
 )
 
-target_link_libraries(rostu_simulation_vel_mul
+target_link_libraries(rostu_simulation_odom_adj
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+  yaml-cpp
+)
+
+target_link_libraries(rostu_simulation_robot_speed
   ${catkin_LIBRARIES}
   ${OpenCV_LIBRARIES}
   yaml-cpp
