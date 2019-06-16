@@ -53,7 +53,6 @@ double kicker_volt;
 string referee_command = "S";
 string robot_team = team_config["team"].as<string>();
 bool startGame = false;
-// int session = 0; //Babak Pertandingan
 
 geometry_msgs::Twist rostu_cmdvel;
 geometry_msgs::Twist cmdvel;
@@ -173,10 +172,6 @@ void move_base_status_callback(const actionlib_msgs::GoalStatusArray& msg) {
     robot_status = msg.status_list[msg_size - 1].status;
   }
 
-  // if (robot_status == 3 || robot_status == 2) {
-  //   lastGoalPosX = 0; lastGoalPosY = 0; lastGoalPosZ = 0; lastGoalPosW = 0;
-  // }
-
   if (startGame) {
     if (!ball_detect) {
       if (robot_status == 3 || robot_status == 2) {
@@ -222,25 +217,6 @@ void move_base_status_callback(const actionlib_msgs::GoalStatusArray& msg) {
   }
 }
 
-void referee_command_callback(const std_msgs::String& msg) {
-  referee_command = msg.data;
-}
-
-void publish_goal_pos(double x, double y, double z, double w) {
-  if (lastGoalPosX != x || lastGoalPosY != y || lastGoalPosZ != z || lastGoalPosW != w) {
-    goal_publish_msg.header.frame_id = "map";
-    goal_publish_msg.pose.position.x = x;
-    goal_publish_msg.pose.position.y = y;
-    goal_publish_msg.pose.orientation.z = z;
-    goal_publish_msg.pose.orientation.w = w;
-    publish_goal.publish(goal_publish_msg);
-    lastGoalPosX = x;
-    lastGoalPosY = y;
-    lastGoalPosZ = z;
-    lastGoalPosW = w;
-  }
-}
-
 int main(int argc, char* argv[]) {
   ros::init(argc, argv, "rostu_navigation");
   ros::NodeHandle nh;
@@ -250,7 +226,6 @@ int main(int argc, char* argv[]) {
   ros::Subscriber sub4 = nh.subscribe("rostu/kicker", 1, kicker_callback);
   ros::Subscriber sub5 = nh.subscribe("amcl_pose", 1, amcl_pose_callback);
   ros::Subscriber sub6 = nh.subscribe("move_base/status", 1, move_base_status_callback);
-  ros::Subscriber sub7 = nh.subscribe("/rostu/gs/referee_command", 1, referee_command_callback);
   ros::Publisher nav_odom = nh.advertise<nav_msgs::Odometry>("odom", 1);
   ros::Publisher cmd_vel = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
   ros::Publisher rostu_vel = nh.advertise<geometry_msgs::Twist>("rostu/cmd_vel", 1);
@@ -292,283 +267,7 @@ int main(int argc, char* argv[]) {
     current_time = ros::Time::now();
     dt = (current_time - last_time).toSec();
 
-    if (referee_command == "S") { //Robot Stop Or Dropball
-      lastGoalPosX = 0; lastGoalPosY = 0; lastGoalPosZ = 0; lastGoalPosW = 0;
-      cancel_goal_pub.publish(cancel_goal_msg);
-      kicker_msg.kick_pwm = 0;
-      cmdvel.linear.x = 0;
-      cmdvel.linear.y = 0;
-      cmdvel.angular.z = 0;
-      cmd_vel.publish(cmdvel);
-      rostu_cmdvel.linear.x = 0;
-      rostu_cmdvel.linear.y = 0;
-      rostu_cmdvel.angular.z = 0;
-      dribling.d1pwm1 = 0;
-      dribling.d1pwm2 = 0;
-      dribling.d2pwm1 = 0;
-      dribling.d2pwm2 = 0;
-      startGame = false;
-      robot_kickoff = false; robot_freekick = false; robot_goalkick = false; robot_throw_in = false; robot_corner = false; robot_penalty = false;
-      enemy_kickoff = false; enemy_freekick = false; enemy_goalkick = false; enemy_throw_in = false; enemy_corner = false; enemy_penalty = false;
-      step_back = false;
-    }
-    else if (referee_command == "N") {
-      dribling.d1pwm1 = 0;
-      dribling.d1pwm2 = 0;
-      dribling.d2pwm1 = 0;
-      dribling.d2pwm2 = 0;
-      startGame = false;
-      robot_kickoff = false; robot_freekick = false; robot_goalkick = false; robot_throw_in = false; robot_corner = false; robot_penalty = false;
-      enemy_kickoff = false; enemy_freekick = false; enemy_goalkick = false; enemy_throw_in = false; enemy_corner = false; enemy_penalty = false;
-      if (robot_team == "C") {
-        publish_goal_pos(3.73551344872, 2.82067728043, 0.257607173491, 0.966249731781);
-      }
-      else if (robot_team == "M") {
-        publish_goal_pos(6.61199522018, 2.70544242859, 0.928864407302, 0.370419914215);
-      }
-    }
-    else if(referee_command == "K") { //Cyan Kickoff
-      if (robot_team == "C") {
-        publish_goal_pos(5.25402927399, 4.76900291443, -0.711607695391, 0.702577033399);
-        robot_kickoff = true;
-        enemy_kickoff = false;
-        waitDelayCondition = false;
-        waitDelaySec = 0.0;
-        waitDelay = ros::Time::now();
-        kickoff_pass_time = ros::Time::now();
-      }
-      else if (robot_team == "M") {
-        publish_goal_pos(6.61199522018, 2.70544242859, 0.928864407302, 0.370419914215);
-        robot_kickoff = false;
-        enemy_kickoff = true;
-        waitDelayCondition = true;
-        waitDelaySec = 8.0;
-        waitDelay = ros::Time::now();
-        kickoff_pass_time = ros::Time::now();
-      }
-    }
-    else if(referee_command == "k") { //Magenta Kickoff
-      if (robot_team == "C") {
-        publish_goal_pos(3.73551344872, 2.82067728043, 0.257607173491, 0.966249731781);
-        robot_kickoff = false;
-        enemy_kickoff = true;
-        waitDelayCondition = true;
-        waitDelaySec = 8.0;
-        waitDelay = ros::Time::now();
-        kickoff_pass_time = ros::Time::now();
-      }
-      else if (robot_team == "M") {
-        publish_goal_pos(5.25402927399, 4.76900291443, -0.711607695391, 0.702577033399);
-        robot_kickoff = true;
-        enemy_kickoff = false;
-        waitDelayCondition = false;
-        waitDelaySec = 0.0;
-        waitDelay = ros::Time::now();
-        kickoff_pass_time = ros::Time::now();
-      }
-    }
-    else if(referee_command == "F") { //Cyan Freekick
-      if (robot_team == "C") {
-        publish_goal_pos(3.73551344872, 2.82067728043, 0.257607173491, 0.966249731781);
-        robot_freekick = true;
-        enemy_freekick = false;
-        waitDelayCondition = false;
-        waitDelaySec = 0.0;
-        waitDelay = ros::Time::now();
-      }
-      else if (robot_team == "M") {
-        publish_goal_pos(6.61199522018, 2.70544242859, 0.928864407302, 0.370419914215);
-        robot_freekick = false;
-        enemy_freekick = true;
-        waitDelayCondition = true;
-        waitDelaySec = 4.0;
-        waitDelay = ros::Time::now();
-      }
-    }
-    else if(referee_command == "f") { //Magenta Freekick
-      if (robot_team == "C") {
-        publish_goal_pos(3.73551344872, 2.82067728043, 0.257607173491, 0.966249731781);
-        robot_freekick = false;
-        enemy_freekick = true;
-        waitDelayCondition = true;
-        waitDelaySec = 4.0;
-        waitDelay = ros::Time::now();
-      }
-      else if (robot_team == "M") {
-        publish_goal_pos(6.61199522018, 2.70544242859, 0.928864407302, 0.370419914215);
-        robot_freekick = true;
-        enemy_freekick = false;
-        waitDelayCondition = false;
-        waitDelaySec = 0.0;
-        waitDelay = ros::Time::now();
-      }
-    }
-    else if(referee_command == "G") { //Cyan Goalkick
-      if (robot_team == "C") {
-        publish_goal_pos(2.31663513184, 3.87645721436, 0.0, 1);
-        robot_goalkick = true;
-        enemy_goalkick = false;
-        waitDelayCondition = false;
-        waitDelaySec = 0.0;
-        waitDelay = ros::Time::now();
-      }
-      else if (robot_team == "M") {
-        publish_goal_pos(6.61199522018, 2.70544242859, 0.928864407302, 0.370419914215);
-        robot_goalkick = false;
-        enemy_goalkick = true;
-        waitDelayCondition = true;
-        waitDelaySec = 4.0;
-        waitDelay = ros::Time::now();
-      }
-    }
-    else if(referee_command == "g") { //Magenta Goalkick
-      if (robot_team == "C") {
-        publish_goal_pos(3.73551344872, 2.82067728043, 0.257607173491, 0.966249731781);
-        robot_goalkick = false;
-        enemy_goalkick = true;
-        waitDelayCondition = true;
-        waitDelaySec = 4.0;
-        waitDelay = ros::Time::now();
-      }
-      else if (robot_team == "M") {
-        publish_goal_pos(8.20516967773, 3.8259832859, 1, 0.0);
-        robot_goalkick = true;
-        enemy_goalkick = false;
-        waitDelayCondition = false;
-        waitDelaySec = 0.0;
-        waitDelay = ros::Time::now();
-      }
-    }
-    else if(referee_command == "T") { //Cyan Throw In
-      if (robot_team == "C") {
-        publish_goal_pos(3.73551344872, 2.82067728043, 0.257607173491, 0.966249731781);
-        robot_throw_in = true;
-        enemy_throw_in = false;
-        waitDelayCondition = false;
-        waitDelaySec = 0.0;
-        waitDelay = ros::Time::now();
-      }
-      else if (robot_team == "M") {
-        publish_goal_pos(6.61199522018, 2.70544242859, 0.928864407302, 0.370419914215);
-        robot_throw_in = false;
-        enemy_throw_in = true;
-        waitDelayCondition = true;
-        waitDelaySec = 4.0;
-        waitDelay = ros::Time::now();
-      }
-    }
-    else if(referee_command == "t") { //Magenta Throw In
-      if (robot_team == "C") {
-        publish_goal_pos(3.73551344872, 2.82067728043, 0.257607173491, 0.966249731781);
-        robot_throw_in = false;
-        enemy_throw_in = true;
-        waitDelayCondition = true;
-        waitDelaySec = 4.0;
-        waitDelay = ros::Time::now();
-      }
-      else if (robot_team == "M") {
-        publish_goal_pos(6.61199522018, 2.70544242859, 0.928864407302, 0.370419914215);
-        robot_throw_in = true;
-        enemy_throw_in = false;
-        waitDelayCondition = false;
-        waitDelaySec = 0.0;
-        waitDelay = ros::Time::now();
-      }
-    }
-    else if(referee_command == "C") { //Cyan Corner
-      if (robot_team == "C") {
-        publish_goal_pos(9.77654838562, 6.95783042908, 0.909825772742, -0.414990437545);
-        robot_corner = true;
-        enemy_corner = false;
-        waitDelayCondition = false;
-        waitDelaySec = 0.0;
-        waitDelay = ros::Time::now();
-      }
-      else if (robot_team == "M") {
-        publish_goal_pos(6.61199522018, 2.70544242859, 0.928864407302, 0.370419914215);
-        robot_corner = false;
-        enemy_corner = true;
-        waitDelayCondition = true;
-        waitDelaySec = 4.0;
-        waitDelay = ros::Time::now();
-      }
-    }
-    else if(referee_command == "c") { //Magenta Corner
-      if (robot_team == "C") {
-        publish_goal_pos(3.73551344872, 2.82067728043, 0.257607173491, 0.966249731781);
-        robot_corner = false;
-        enemy_corner = true;
-        waitDelayCondition = true;
-        waitDelaySec = 4.0;
-        waitDelay = ros::Time::now();
-      }
-      else if (robot_team == "M") {
-        publish_goal_pos(0.629880428314, 0.816191673279, 0.310069670694, 0.950713836712);
-        robot_corner = true;
-        enemy_corner = false;
-        waitDelayCondition = false;
-        waitDelaySec = 0.0;
-        waitDelay = ros::Time::now();
-      }
-    }
-    else if(referee_command == "P") { //Cyan Penalty
-      if (robot_team == "C") {
-        robot_penalty = true;
-        enemy_penalty = false;
-        waitDelayCondition = false;
-        waitDelaySec = 0.0;
-        waitDelay = ros::Time::now();
-      }
-      else if (robot_team == "M") {
-        robot_penalty = false;
-        enemy_penalty = true;
-        waitDelayCondition = true;
-        waitDelaySec = 4.0;
-        waitDelay = ros::Time::now();
-      }
-    }
-    else if(referee_command == "p") { //Magenta Penalty
-      if (robot_team == "C") {
-        robot_penalty = false;
-        enemy_penalty = true;
-        waitDelayCondition = true;
-        waitDelaySec = 4.0;
-        waitDelay = ros::Time::now();
-      }
-      else if (robot_team == "M") {
-        robot_penalty = true;
-        enemy_penalty = false;
-        waitDelayCondition = false;
-        waitDelaySec = 0.0;
-        waitDelay = ros::Time::now();
-      }
-    }
-    else if(referee_command == "s") { //Robot Start
-
-      if (!waitDelayCondition) {
-        startGame = true;
-      }
-      else if(waitDelayCondition) {
-        if (enemy_kickoff) {
-          if (robot_team == "C") {
-            publish_goal_pos(4.47390794754, 3.27618312836, 0.256563103513, 0.966527482235);
-          }
-          else if (robot_team == "M") {
-            publish_goal_pos(6.026092032, 3.27618312836, 0.966527482235, 0.256563103513);
-          }
-          enemy_kickoff = false;
-        }
-
-        if ((current_time - waitDelay).toSec() > waitDelaySec) {
-          waitDelayCondition = false;
-          startGame = true;
-        }
-      }
-
-      if ((current_time - kickoff_pass_time).toSec() > 2) {
-        robot_kickoff = false;
-      }
-
+    if(referee_command == "s") { //Robot Start
       if (startGame) {
         if (got_ball && robot_status != 1) {
           if (robot_kickoff) {
@@ -578,16 +277,6 @@ int main(int argc, char* argv[]) {
             dribling.d2pwm2 = 255;
             dribling_pub.publish(dribling);
           }
-          // else if (robot_team == "M" && robot_center_pose_x <= 3) {
-          //   publish_goal_pos(4.56785202026, 1.98737204075, 0.97437167892, 0.224944062643);
-          //   step_back = true;
-          //   delayUniversal = ros::Time::now();
-          // }
-          // else if (robot_team == "C" && robot_center_pose_x >= 7.5) {
-          //   publish_goal_pos(6.13059663773, 2.24405288696, 0.1711920153, 0.985237683961);
-          //   step_back = true;
-          //   delayUniversal = ros::Time::now();
-          // }
           else if (robot_angle_from_goal != 0) {
             double output = PD_Controller(robot_angle_from_goal);
             if (output > 2) {
@@ -673,67 +362,8 @@ int main(int argc, char* argv[]) {
           dribling.d2pwm1 = 0;
           dribling.d2pwm2 = 0;
         }
-
-        // if ((current_time - delayUniversal).toSec() > 1) {
-        //   if (robot_status == 3) {
-        //     step_back = false;
-        //   }
-        // }
-        //
-        // if (step_back) {
-        //   dribling.d1pwm1 = 200;
-        //   dribling.d1pwm2 = 0;
-        //   dribling.d2pwm1 = 200;
-        //   dribling.d2pwm2 = 0;
-        //   dribling_pub.publish(dribling);
-        // }
       }
     }
-
-    /*if (ball_detect) {
-      double output = PD_Controller();
-
-      if (output > 0 ) {
-        angular_z_vel = PD_Value * -1;
-      }
-      else if (output < 0) {
-        angular_z_vel = PD_Value * -1;
-      }
-      else {
-        angular_z_vel = 0;
-      }
-
-      if (angular_z_vel > 3) {
-        angular_z_vel = 3;
-      }
-
-      if (angular_z_vel < -3) {
-        angular_z_vel = -3;
-      }
-
-      if (ball_angle_from_frame < 45 && ball_angle_from_frame > -45) {
-        if (ball_distance_from_frame > 100) {
-          cmdvel.linear.x = 2.0;
-        }
-        else if (ball_distance_from_frame <= 100 && ball_distance_from_frame > 50) {
-          cmdvel.linear.x = 1.0;
-        }
-        else if (ball_distance_from_frame <= 50 && ball_distance_from_frame > 20) {
-          if (ball_angle_from_frame < 20 && ball_angle_from_frame > -20) {
-            cmdvel.linear.x = 0.5;
-          }
-          else {
-            cmdvel.linear.x = 0.0;
-          }
-        }
-        else if (ball_distance_from_frame <= 20) {
-          cmdvel.linear.x = 0.0;
-        }
-      }
-
-      cmdvel.angular.z = angular_z_vel;
-      cmd_vel.publish(cmdvel);
-    }*/
 
     geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(th);
 
