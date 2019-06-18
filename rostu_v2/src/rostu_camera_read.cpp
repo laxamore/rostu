@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
   while (ros::ok()) {
     cap >> frame;
 
-    Rect myROI(100 , 0 / 2, 600, 600);
+    Rect myROI(140 , 0, 600, 600);
     frame = frame(myROI);
 
     sensor_msgs::ImagePtr camMsg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", frame).toImageMsg();
