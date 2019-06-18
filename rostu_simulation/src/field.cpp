@@ -35,6 +35,7 @@ bool spawn = false;
 
 int obstaclePosX = 0, obstaclePosY = 0;
 
+string robotName = "";
 
 double vx;
 double vy;
@@ -147,6 +148,14 @@ vector<double> findDistanceNAngle(int x1, int y1, int x2, int y2, double sinH, d
 }
 
 int main(int argc, char **argv) {
+  if (argc == 4) {
+    robotName = argv[1];
+  //   ros::init(argc, argv, robotName + "_rostu_simulation");
+  }
+  // else {
+  //   ros::init(argc, argv, "rostu_simulation");
+  // }
+
   ros::init(argc, argv, "rostu_simulation");
   ros::NodeHandle nh;
   ros::Subscriber sub = nh.subscribe("cmd_vel", 1, cmd_vel_callback);
@@ -172,7 +181,7 @@ int main(int argc, char **argv) {
   last_time = ros::Time::now();
 
   sensor_msgs::LaserScan obstacleScan;
-  obstacleScan.header.frame_id = "base_laser_link";
+  obstacleScan.header.frame_id =  robotName + "/base_laser_link";
   obstacleScan.angle_min = -3.14159;
   obstacleScan.angle_max = 3.14159;
   obstacleScan.angle_increment = 0.0174533;
@@ -187,7 +196,7 @@ int main(int argc, char **argv) {
   }
 
   sensor_msgs::LaserScan lineScan;
-  lineScan.header.frame_id = "base_laser_link";
+  lineScan.header.frame_id =  robotName + "/base_laser_link";
   lineScan.angle_min = -3.14159;
   lineScan.angle_max = 3.14159;
   lineScan.angle_increment = 0.0174533;
@@ -210,10 +219,10 @@ int main(int argc, char **argv) {
 
   while (ros::ok()) {
     current_time = ros::Time::now();
-    obstacleScan.header.frame_id = "base_laser_link";
+    obstacleScan.header.frame_id =  robotName + "/base_laser_link";
     obstacleScan.header.stamp = current_time;
 
-    lineScan.header.frame_id = "base_laser_link";
+    lineScan.header.frame_id =  robotName + "/base_laser_link";
     lineScan.header.stamp = current_time;
 
     dt = (current_time - last_time).toSec();
@@ -313,8 +322,8 @@ int main(int argc, char **argv) {
 
     geometry_msgs::TransformStamped bll_trans;
     bll_trans.header.stamp = current_time;
-    bll_trans.header.frame_id = "base_link";
-    bll_trans.child_frame_id = "base_laser_link";
+    bll_trans.header.frame_id =  robotName + "/base_link";
+    bll_trans.child_frame_id =  robotName + "/base_laser_link";
 
     bll_trans.transform.translation.x = 0;
     bll_trans.transform.translation.y = 0;
@@ -324,8 +333,8 @@ int main(int argc, char **argv) {
 
     geometry_msgs::TransformStamped bl_trans;
     bl_trans.header.stamp = current_time;
-    bl_trans.header.frame_id = "base_footprint";
-    bl_trans.child_frame_id = "base_link";
+    bl_trans.header.frame_id =  robotName + "/base_footprint";
+    bl_trans.child_frame_id =  robotName + "/base_link";
 
     bl_trans.transform.translation.x = 0;
     bl_trans.transform.translation.y = 0;
@@ -335,8 +344,8 @@ int main(int argc, char **argv) {
 
     geometry_msgs::TransformStamped bf_trans;
     bf_trans.header.stamp = current_time;
-    bf_trans.header.frame_id = "odom";
-    bf_trans.child_frame_id = "base_footprint";
+    bf_trans.header.frame_id =  robotName + "/odom";
+    bf_trans.child_frame_id =  robotName + "/base_footprint";
 
     bf_trans.transform.translation.x = odom_x;
     bf_trans.transform.translation.y = odom_y;
@@ -346,7 +355,7 @@ int main(int argc, char **argv) {
 
     nav_msgs::Odometry odom;
     odom.header.stamp = current_time;
-    odom.header.frame_id = "odom";
+    odom.header.frame_id =  robotName + "/odom";
 
     odom.pose.pose.position.x = odom_x;
     odom.pose.pose.position.y = odom_y;

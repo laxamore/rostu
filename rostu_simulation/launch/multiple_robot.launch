@@ -1,0 +1,43 @@
+
+<launch>
+	<arg name="robot_name" />
+
+  	<group ns="$(arg robot_name)">
+		<node pkg="rostu_simulation" type="field" name="field" args="$(arg robot_name)" />
+		<node pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" name="teleop_twist_keyboard" output="screen"/>
+
+		<node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+			<rosparam file="$(find rostu_simulation)/cfg/omnidir/costmap_common_params.yaml" command="load" ns="global_costmap" />
+			<rosparam file="$(find rostu_simulation)/cfg/omnidir/costmap_common_params.yaml" command="load" ns="local_costmap" />
+			<rosparam file="$(find rostu_simulation)/cfg/omnidir/local_costmap_params.yaml" command="load" />
+			<rosparam file="$(find rostu_simulation)/cfg/omnidir/global_costmap_params.yaml" command="load" />
+			<rosparam file="$(find rostu_simulation)/cfg/omnidir/teb_local_planner_params.yaml" command="load" />
+
+			<param name="global_costmap/robot_base_frame"            value="$(arg robot_name)/base_link"/>
+			<param name="local_costmap/robot_base_frame"            value="$(arg robot_name)/base_link"/>
+			<param name="base_local_planner" value="teb_local_planner/TebLocalPlannerROS" />
+			<param name="controller_frequency" value="10.0" />
+			<param name="controller_patience" value="30.0" />
+			<remap from="map" to="/map" />
+		</node>
+	</group>
+
+
+	<node pkg="amcl" type="amcl" name="$(arg robot_name)amcl" output="screen">
+		<rosparam file="$(find rostu_simulation)/cfg/amcl_params.yaml" command="load" />
+		<param name="odom_model_type"		value="omni"/>
+		<param name="initial_pose_x"            value="0"/>
+		<param name="initial_pose_y"            value="0"/>
+		<param name="initial_pose_a"            value="0"/>
+		<param name="odom_frame_id"            value="$(arg robot_name)/odom"/>
+		<param name="base_frame_id"            value="$(arg robot_name)/base_footprint"/>
+
+		<remap from="amcl/parameter_descriptions" to="/$(arg robot_name)/amcl/parameter_descriptions" />
+		<remap from="amcl/parameter_updates" to="/$(arg robot_name)/amcl/parameter_updates" />
+		<remap from="amcl_pose" to="/$(arg robot_name)/amcl_pose" />
+		<remap from="/clicked_point" to="/$(arg robot_name)/clicked_point" />
+		<remap from="/initialpose" to="/$(arg robot_name)/initialpose" />
+		<remap from="/particlecloud" to="/$(arg robot_name)/particlecloud" />
+		<remap from="scan" to="/$(arg robot_name)/scan" />
+	</node>
+</launch>

@@ -1,0 +1,18 @@
+<launch>
+    <include file="$(find rostu_simulation)/launch/multiple_robot.launch" >
+        <param name="tf_prefix" value="striker" />
+        <arg name="robot_name"  value="striker" />
+    </include>
+
+    <include file="$(find rostu_simulation)/launch/multiple_robot.launch" >
+        <param name="tf_prefix" value="defender" />
+        <arg name="robot_name"  value="defender" />
+    </include>
+    
+	<node name="map_server" pkg="map_server" type="map_server" args="$(find rostu_simulation)/maps/field.yaml" output="screen">
+		<param name="frame_id" value="/map"/>
+	</node>
+
+	<node name="rostu_gui" pkg="rostu_gui" type="rostuUi.py" />
+	<!-- <node name="rviz" pkg="rviz" type="rviz" args="-d $(find rostu_simulation)/cfg/rviz_navigation_teb_multiple.rviz"/> -->
+</launch>
