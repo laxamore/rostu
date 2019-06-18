@@ -133,8 +133,8 @@ int main(int argc, char* argv[]) {
               {0, 0, 1}};
   double D[4] = {-3.6398325292946572e+00, 1.2492382933927574e+01, -2.4262599729606483e-03, -6.9693476709567310e-03};
   double XI = 2.5974583367371133e+00;
-  double KNEW[3][3] = {{600/12, 0, 600/2},
-                      {0, 600/12, 600/2},
+  double KNEW[3][3] = {{600/6, 0, 600/2},
+                      {0, 600/6, 600/2},
                       {0, 0, 1}};
 
   Mat knew = Mat(3, 3, CV_64F, KNEW);
@@ -212,7 +212,7 @@ int main(int argc, char* argv[]) {
       omnidir::undistortImage(frame, frame, k, d, xi, omnidir::RECTIFY_PERSPECTIVE, knew);
     }
 
-    flip(frame, frame, 1);
+    flip(frame, frame, 0);
 
     if (!getROI) {
       if (!sampling && !saveROI) {

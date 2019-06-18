@@ -98,7 +98,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg) {
 
     //Undistort Omnidirectional Camera
     omnidir::undistortImage(frame, frame, k, d, xi, omnidir::RECTIFY_PERSPECTIVE, knew);
-    flip(frame, frame, 1);
+    flip(frame, frame, 0);
     resize(frame, frame, Size(600 * (float(x_resize_value) / 100), 600 * (float(y_resize_value) / 100)), 0, 0, cv::INTER_AREA);
 
     //Convert Captured Frame From BGR to HSV

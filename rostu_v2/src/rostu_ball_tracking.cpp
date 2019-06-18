@@ -61,7 +61,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg) {
 
     omnidir::undistortImage(frame, frame, k, d, xi, omnidir::RECTIFY_PERSPECTIVE, knew);
 
-    flip(frame, frame, 1);
+    flip(frame, frame, 0);
 
     cvtColor(frame, hsv, COLOR_BGR2HSV);
 

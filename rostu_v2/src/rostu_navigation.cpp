@@ -23,6 +23,7 @@
 #include <rostu_v2/Kicker.h>
 #include <std_msgs/Float32.h>
 #include <std_msgs/String.h>
+#include <std_msgs/Int16MultiArray.h>
 
 #define PI 3.14159265358979323846
 
@@ -30,14 +31,28 @@ using namespace std;
 
 string path = ros::package::getPath("rostu_v2");
 YAML::Node team_config = YAML::LoadFile(path + "/cfg/rostu/team.yaml");
-
-double x;
-double y;
-double th = 0;
+YAML::Node speed_mul = YAML::LoadFile(path + "/cfg/rostu/speed_mul.yaml");
+YAML::Node odom_mul = YAML::LoadFile(path + "/cfg/rostu/odom_mul.yaml");
 
 double vx;
 double vy;
 double vth;
+
+double vx_speed = float(speed_mul["x_speed_mul"].as<int>()) / float(100);
+double vy_speed = float(speed_mul["y_speed_mul"].as<int>()) / float(100);
+double vth_speed = float(speed_mul["w_speed_mul"].as<int>()) / float(100);
+
+double odom_x;
+double odom_y;
+double odom_th;
+
+double odom_vx;
+double odom_vy;
+double odom_vth;
+
+double vx_odom = float(odom_mul["x_odom_mul"].as<int>()) / float(100);
+double vy_odom = float(odom_mul["y_odom_mul"].as<int>()) / float(100);
+double vth_odom = float(odom_mul["w_odom_mul"].as<int>()) / float(100);
 
 double dt;
 double delta_x;
@@ -98,24 +113,42 @@ double PD_Controller(double th) {
   return PD_Value;
 }
 
+void odom_mul_callback(const std_msgs::Int16MultiArray& msg) {
+  vx_odom = float(msg.data[0]) / float(100);
+  vy_odom = float(msg.data[1]) / float(100);
+  vth_odom = float(msg.data[2]) / float(100);
+}
+
+void speed_mul_callback(const std_msgs::Int16MultiArray& msg) {
+  vx_speed = float(msg.data[0]) / float(100);
+  vy_speed = float(msg.data[1]) / float(100);
+  vth_speed = float(msg.data[2]) / float(100);
+}
+
 void cmd_vel_callback(const geometry_msgs::Twist& msg) {
-  vx = msg.linear.x;
-  vy = msg.linear.y;
-  vth = msg.angular.z;
+  odom_vx = msg.linear.x * vx_odom;
+  odom_vy = msg.linear.y * vy_odom;
+  odom_vth = msg.angular.z * vth_odom;
 
-  delta_x = (vx * cos(th) - vy * sin(th)) * dt;
-  delta_y = (vx * sin(th) + vy * cos(th)) * dt;
-  delta_th = vth * dt;
+  delta_x = (odom_vx * cos(odom_th) - odom_vy * sin(odom_th)) * dt;
+  delta_y = (odom_vx * sin(odom_th) + odom_vy * cos(odom_th)) * dt;
+  delta_th = odom_vth * dt;
 
-  x += delta_x;
-  y += delta_y;
-  th += delta_th;
+  odom_x += delta_x;
+  odom_y += delta_y;
+  odom_th += delta_th;
 
   delta_x = 0;
   delta_y = 0;
   delta_th = 0;
 
-  rostu_cmdvel = msg;
+  vx = msg.linear.x * vx_speed;
+  vy = msg.linear.y * vy_speed;
+  vth = msg.angular.z * vth_speed;
+
+  rostu_cmdvel.linear.x = vx;
+  rostu_cmdvel.linear.y = vy;
+  rostu_cmdvel.angular.z = vth;
 }
 
 void ball_coor_callback(const rostu_v2::BallCoor& msg) {
@@ -231,6 +264,8 @@ int main(int argc, char* argv[]) {
   ros::Subscriber sub4 = nh.subscribe("rostu/kicker", 1, kicker_callback);
   ros::Subscriber sub5 = nh.subscribe("amcl_pose", 1, amcl_pose_callback);
   ros::Subscriber sub6 = nh.subscribe("move_base/status", 1, move_base_status_callback);
+  ros::Subscriber sub7 = nh.subscribe("vel_mul", 1, speed_mul_callback);
+  ros::Subscriber sub8 = nh.subscribe("odom_mul", 1, odom_mul_callback);
   ros::Publisher nav_odom = nh.advertise<nav_msgs::Odometry>("odom", 1);
   ros::Publisher cmd_vel = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
   ros::Publisher rostu_vel = nh.advertise<geometry_msgs::Twist>("rostu/cmd_vel", 1);
@@ -245,9 +280,9 @@ int main(int argc, char* argv[]) {
   tf::TransformBroadcaster bl_broadcaster;
   tf::TransformBroadcaster bf_broadcaster;
 
-  x = 0.0;
-  y = 0.0;
-  th = 0.0;
+  odom_x = 0.0;
+  odom_y = 0.0;
+  odom_th = 0.0;
 
   ros::Time kickoff_pass_time;
 
@@ -370,7 +405,7 @@ int main(int argc, char* argv[]) {
       }
     }
 
-    geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(th);
+    geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(odom_th);
 
     geometry_msgs::TransformStamped bll_trans;
     bll_trans.header.stamp = current_time;
@@ -399,8 +434,8 @@ int main(int argc, char* argv[]) {
     bf_trans.header.frame_id = robotName + "/odom";
     bf_trans.child_frame_id = robotName + "/base_footprint";
 
-    bf_trans.transform.translation.x = x;
-    bf_trans.transform.translation.y = y;
+    bf_trans.transform.translation.x = odom_x;
+    bf_trans.transform.translation.y = odom_y;
     bf_trans.transform.translation.z = 0.0;
     bf_trans.transform.rotation = odom_quat;
     bf_broadcaster.sendTransform(bf_trans);
@@ -409,15 +444,15 @@ int main(int argc, char* argv[]) {
     odom.header.stamp = current_time;
     odom.header.frame_id = robotName + "/odom";
 
-    odom.pose.pose.position.x = x;
-    odom.pose.pose.position.y = y;
+    odom.pose.pose.position.x = odom_x;
+    odom.pose.pose.position.y = odom_y;
     odom.pose.pose.position.z = 0.0;
     odom.pose.pose.orientation = odom_quat;
 
     odom.child_frame_id = "";
-    odom.twist.twist.linear.x = vx;
-    odom.twist.twist.linear.y = vy;
-    odom.twist.twist.angular.z = vth;
+    odom.twist.twist.linear.x = odom_vx;
+    odom.twist.twist.linear.y = odom_vy;
+    odom.twist.twist.angular.z = odom_vth;
 
     rostu_vel.publish(rostu_cmdvel);
     dribling_pub.publish(dribling);
@@ -438,4 +473,5 @@ int main(int argc, char* argv[]) {
 
   return 0;
 }
+
 
