@@ -21,6 +21,8 @@ using namespace cv;
 string path = ros::package::getPath("rostu_v2");
 YAML::Node calibration_data = YAML::LoadFile(path + "/cfg/rostu/rostu_vision.yaml");
 
+string robotName = "";
+
 ros::Publisher scanPub;
 ros::Time current_time, last_time;
 sensor_msgs::LaserScan lineScan;
@@ -190,6 +192,10 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg) {
 }
 
 int main(int argc, char* argv[]) {
+  if (argc == 4) {
+    robotName = argv[1];
+  }
+  
   ros::init(argc, argv, "rostu_line_tracking");
   ros::NodeHandle nh;
   image_transport::ImageTransport it(nh);
@@ -200,7 +206,7 @@ int main(int argc, char* argv[]) {
   current_time = ros::Time::now();
   last_time = ros::Time::now();
 
-  lineScan.header.frame_id = "base_laser_link";
+  lineScan.header.frame_id = robotName + "/base_laser_link";
   lineScan.angle_min = -3.14159;
   lineScan.angle_max = 3.14159;
   lineScan.angle_increment = 0.0174533;

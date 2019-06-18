@@ -52,6 +52,7 @@ double ball_angle_from_frame;
 double kicker_volt;
 string referee_command = "S";
 string robot_team = team_config["team"].as<string>();
+string robotName = "";
 bool startGame = false;
 
 geometry_msgs::Twist rostu_cmdvel;
@@ -218,6 +219,10 @@ void move_base_status_callback(const actionlib_msgs::GoalStatusArray& msg) {
 }
 
 int main(int argc, char* argv[]) {
+  if (argc == 4) {
+    robotName = argv[1];
+  }
+  
   ros::init(argc, argv, "rostu_navigation");
   ros::NodeHandle nh;
   ros::Subscriber sub1 = nh.subscribe("cmd_vel", 1, cmd_vel_callback);
@@ -369,8 +374,8 @@ int main(int argc, char* argv[]) {
 
     geometry_msgs::TransformStamped bll_trans;
     bll_trans.header.stamp = current_time;
-    bll_trans.header.frame_id = "base_link";
-    bll_trans.child_frame_id = "base_laser_link";
+    bll_trans.header.frame_id = robotName + "/base_link";
+    bll_trans.child_frame_id = robotName + "/base_laser_link";
 
     bll_trans.transform.translation.x = 0;
     bll_trans.transform.translation.y = 0;
@@ -380,8 +385,8 @@ int main(int argc, char* argv[]) {
 
     geometry_msgs::TransformStamped bl_trans;
     bl_trans.header.stamp = current_time;
-    bl_trans.header.frame_id = "base_footprint";
-    bl_trans.child_frame_id = "base_link";
+    bl_trans.header.frame_id = robotName + "/base_footprint";
+    bl_trans.child_frame_id = robotName + "/base_link";
 
     bl_trans.transform.translation.x = 0;
     bl_trans.transform.translation.y = 0;
@@ -391,8 +396,8 @@ int main(int argc, char* argv[]) {
 
     geometry_msgs::TransformStamped bf_trans;
     bf_trans.header.stamp = current_time;
-    bf_trans.header.frame_id = "odom";
-    bf_trans.child_frame_id = "base_footprint";
+    bf_trans.header.frame_id = robotName + "/odom";
+    bf_trans.child_frame_id = robotName + "/base_footprint";
 
     bf_trans.transform.translation.x = x;
     bf_trans.transform.translation.y = y;
@@ -402,7 +407,7 @@ int main(int argc, char* argv[]) {
 
     nav_msgs::Odometry odom;
     odom.header.stamp = current_time;
-    odom.header.frame_id = "odom";
+    odom.header.frame_id = robotName + "/odom";
 
     odom.pose.pose.position.x = x;
     odom.pose.pose.position.y = y;
