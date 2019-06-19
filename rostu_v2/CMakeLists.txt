@@ -41,7 +41,7 @@ add_executable(rostu_camera_read src/rostu_camera_read.cpp)
 add_executable(rostu_line_tracking src/rostu_line_tracking.cpp)
 add_executable(rostu_ball_tracking src/rostu_ball_tracking.cpp)
 add_executable(rostu_v2_calibration src/rostu_calibration.cpp)
-add_executable(rostu_vel_mul src/vel_mul.cpp)
+add_executable(rostu_speed_mul src/speed_mul.cpp)
 add_executable(rostu_scan_adj src/scanning_matching_adjustment.cpp)
 
 target_link_libraries(rostu_navigation
@@ -72,7 +72,7 @@ target_link_libraries(rostu_v2_calibration
   yaml-cpp
 )
 
-target_link_libraries(rostu_vel_mul
+target_link_libraries(rostu_speed_mul
   ${catkin_LIBRARIES}
   ${OpenCV_LIBRARIES}
   yaml-cpp

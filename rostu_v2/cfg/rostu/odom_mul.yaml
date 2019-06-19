@@ -1,4 +1,3 @@
-y_odom_mul: 60
-x_odom_mul: 60
-w_odom_mul: 85
-
+w_odom_mul: 110
+y_odom_mul: 90
+x_odom_mul: 90
