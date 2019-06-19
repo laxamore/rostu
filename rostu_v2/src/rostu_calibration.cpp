@@ -116,7 +116,7 @@ int main(int argc, char* argv[]) {
       return 0;
   }
 
-  VideoCapture cap(1);
+  VideoCapture cap(0);
 
   if(!cap.isOpened())
       return -1;

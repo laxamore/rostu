@@ -1,6 +1,6 @@
 
 <launch>
-	<arg name="robot_name" value="striker"/>
+	<arg name="robot_name" value="defender"/>
 
   	<group ns="$(arg robot_name)">
         <node pkg="rosserial_python" type="serial_node.py" name="controller_player1">
@@ -10,10 +10,10 @@
         
         <node pkg="rosserial_python" type="serial_node.py" name="kicker_player1">
             <param name="port"      value="/dev/kicker_serial" />
-                    <param name="baud"      value="57600" />
+            <param name="baud"      value="57600" />
         </node>
         
-        <node pkg="rostu_v2" type="rostu_vel_mul" name="rostu_vel_mul" />
+        <node pkg="rostu_v2" type="rostu_speed_mul" name="rostu_speed_mul" />
         <node pkg="rostu_v2" type="rostu_camera_read" name="rostu_camera_pub" />
         <node pkg="rostu_v2" type="rostu_line_tracking" name="rostu_line_tracking" args="$(arg robot_name)" />
         <node pkg="rostu_v2" type="rostu_ball_tracking" name="rostu_ball_tracking" />
@@ -59,8 +59,4 @@
 		<remap from="/particlecloud" to="/$(arg robot_name)/particlecloud" />
 		<remap from="scan" to="/$(arg robot_name)/scan" />
 	</node>
-	
-	<node name="map_server" pkg="map_server" type="map_server" args="$(find rostu_v2)/maps/field.yaml" output="screen">
-                <param name="frame_id" value="/map"/>
-        </node>
 </launch>

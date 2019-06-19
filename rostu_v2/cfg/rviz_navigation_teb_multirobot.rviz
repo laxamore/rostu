@@ -5,8 +5,8 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
-        - /Striker Local Planner1
-        - /Striker1
+        - /Local Planner1
+        - /Robot1
       Splitter Ratio: 0.6050959825515747
     Tree Height: 317
   - Class: rviz/Selection
@@ -82,7 +82,7 @@ Visualization Manager:
           Marker Topic: /striker/move_base/TebLocalPlannerROS/teb_markers
           Name: TebMarker
           Namespaces:
-            {}
+            TebContainer: true
           Queue Size: 100
           Value: true
         - Alpha: 1
@@ -119,7 +119,7 @@ Visualization Manager:
           Use Timestamp: false
           Value: true
       Enabled: true
-      Name: Striker Local Planner
+      Name: Local Planner
     - Class: rviz/Group
       Displays:
         - Alpha: 1
@@ -156,7 +156,7 @@ Visualization Manager:
           Use Timestamp: false
           Value: true
       Enabled: true
-      Name: Striker Global Planner
+      Name: Global Planner
     - Class: rviz/Group
       Displays:
         - Alpha: 1
@@ -218,14 +218,6 @@ Visualization Manager:
           Frame Timeout: 15
           Frames:
             All Enabled: true
-            defender/base_footprint:
-              Value: true
-            defender/base_laser_link:
-              Value: true
-            defender/base_link:
-              Value: true
-            defender/odom:
-              Value: true
             map:
               Value: true
             striker/base_footprint:
@@ -243,10 +235,10 @@ Visualization Manager:
           Show Names: true
           Tree:
             map:
-              defender/odom:
-                defender/base_footprint:
-                  defender/base_link:
-                    defender/base_laser_link:
+              striker/odom:
+                striker/base_footprint:
+                  striker/base_link:
+                    striker/base_laser_link:
                       {}
           Update Interval: 0
           Value: true
@@ -267,7 +259,7 @@ Visualization Manager:
               Scale: 1
               Value: true
             Value: true
-          Enabled: false
+          Enabled: true
           Keep: 100
           Name: Odometry
           Position Tolerance: 0.10000000149011612
@@ -283,236 +275,9 @@ Visualization Manager:
             Value: Arrow
           Topic: /striker/odom
           Unreliable: false
-          Value: false
-      Enabled: true
-      Name: Striker
-    - Class: rviz/Group
-      Displays:
-        - Alpha: 1
-          Arrow Length: 0.30000001192092896
-          Axes Length: 0.30000001192092896
-          Axes Radius: 0.009999999776482582
-          Class: rviz/PoseArray
-          Color: 255; 25; 0
-          Enabled: true
-          Head Length: 0.07000000029802322
-          Head Radius: 0.029999999329447746
-          Name: TebPoses
-          Shaft Length: 0.23000000417232513
-          Shaft Radius: 0.009999999776482582
-          Shape: Arrow (Flat)
-          Topic: /defender/move_base/TebLocalPlannerROS/teb_poses
-          Unreliable: false
-          Value: true
-        - Class: rviz/Marker
-          Enabled: true
-          Marker Topic: /defender/move_base/TebLocalPlannerROS/teb_markers
-          Name: TebMarker
-          Namespaces:
-            {}
-          Queue Size: 100
-          Value: true
-        - Alpha: 1
-          Buffer Length: 1
-          Class: rviz/Path
-          Color: 255; 0; 0
-          Enabled: true
-          Head Diameter: 0.30000001192092896
-          Head Length: 0.20000000298023224
-          Length: 0.30000001192092896
-          Line Style: Lines
-          Line Width: 0.029999999329447746
-          Name: LocalPath
-          Offset:
-            X: 0
-            Y: 0
-            Z: 0
-          Pose Color: 255; 85; 255
-          Pose Style: None
-          Radius: 0.029999999329447746
-          Shaft Diameter: 0.10000000149011612
-          Shaft Length: 0.10000000149011612
-          Topic: /defender/move_base/TebLocalPlannerROS/local_plan
-          Unreliable: false
-          Value: true
-        - Alpha: 0.4000000059604645
-          Class: rviz/Map
-          Color Scheme: map
-          Draw Behind: false
-          Enabled: true
-          Name: LocalCostmap
-          Topic: /defender/move_base/local_costmap/costmap
-          Unreliable: false
-          Use Timestamp: false
           Value: true
       Enabled: true
-      Name: Defender Local Planner
-    - Class: rviz/Group
-      Displays:
-        - Alpha: 1
-          Buffer Length: 1
-          Class: rviz/Path
-          Color: 25; 255; 0
-          Enabled: true
-          Head Diameter: 0.30000001192092896
-          Head Length: 0.20000000298023224
-          Length: 0.30000001192092896
-          Line Style: Lines
-          Line Width: 0.029999999329447746
-          Name: GlobalPath
-          Offset:
-            X: 0
-            Y: 0
-            Z: 0
-          Pose Color: 255; 85; 255
-          Pose Style: None
-          Radius: 0.029999999329447746
-          Shaft Diameter: 0.10000000149011612
-          Shaft Length: 0.10000000149011612
-          Topic: /defender/move_base/TebLocalPlannerROS/global_plan
-          Unreliable: false
-          Value: true
-        - Alpha: 0.699999988079071
-          Class: rviz/Map
-          Color Scheme: map
-          Draw Behind: false
-          Enabled: true
-          Name: GlobalCostmap
-          Topic: /defender/move_base/global_costmap/costmap
-          Unreliable: false
-          Use Timestamp: false
-          Value: true
-      Enabled: true
-      Name: Defender Global Planner
-    - Class: rviz/Group
-      Displays:
-        - Alpha: 1
-          Class: rviz/Polygon
-          Color: 85; 0; 255
-          Enabled: true
-          Name: Robot Footprint
-          Topic: /defender/move_base/local_costmap/footprint
-          Unreliable: false
-          Value: true
-        - Alpha: 1
-          Autocompute Intensity Bounds: true
-          Autocompute Value Bounds:
-            Max Value: 10
-            Min Value: -10
-            Value: true
-          Axis: Z
-          Channel Name: intensity
-          Class: rviz/LaserScan
-          Color: 255; 255; 255
-          Color Transformer: Intensity
-          Decay Time: 0
-          Enabled: true
-          Invert Rainbow: false
-          Max Color: 255; 255; 255
-          Max Intensity: 126
-          Min Color: 0; 0; 0
-          Min Intensity: 126
-          Name: LaserScan
-          Position Transformer: XYZ
-          Queue Size: 10
-          Selectable: true
-          Size (Pixels): 3
-          Size (m): 0.05000000074505806
-          Style: Flat Squares
-          Topic: /defender/scan
-          Unreliable: false
-          Use Fixed Frame: true
-          Use rainbow: true
-          Value: true
-        - Alpha: 1
-          Arrow Length: 0.10000000149011612
-          Axes Length: 0.30000001192092896
-          Axes Radius: 0.009999999776482582
-          Class: rviz/PoseArray
-          Color: 255; 25; 0
-          Enabled: true
-          Head Length: 0.07000000029802322
-          Head Radius: 0.029999999329447746
-          Name: AMCL Particles
-          Shaft Length: 0.23000000417232513
-          Shaft Radius: 0.009999999776482582
-          Shape: Arrow (Flat)
-          Topic: /defender/particlecloud
-          Unreliable: false
-          Value: true
-        - Class: rviz/TF
-          Enabled: true
-          Frame Timeout: 15
-          Frames:
-            All Enabled: true
-            defender/base_footprint:
-              Value: true
-            defender/base_laser_link:
-              Value: true
-            defender/base_link:
-              Value: true
-            defender/odom:
-              Value: true
-            map:
-              Value: true
-            striker/base_footprint:
-              Value: true
-            striker/base_laser_link:
-              Value: true
-            striker/base_link:
-              Value: true
-            striker/odom:
-              Value: true
-          Marker Scale: 1
-          Name: TF
-          Show Arrows: true
-          Show Axes: true
-          Show Names: true
-          Tree:
-            map:
-              defender/odom:
-                defender/base_footprint:
-                  defender/base_link:
-                    defender/base_laser_link:
-                      {}
-          Update Interval: 0
-          Value: true
-        - Angle Tolerance: 0.10000000149011612
-          Class: rviz/Odometry
-          Covariance:
-            Orientation:
-              Alpha: 0.5
-              Color: 255; 255; 127
-              Color Style: Unique
-              Frame: Local
-              Offset: 1
-              Scale: 1
-              Value: true
-            Position:
-              Alpha: 0.30000001192092896
-              Color: 204; 51; 204
-              Scale: 1
-              Value: true
-            Value: true
-          Enabled: false
-          Keep: 100
-          Name: Odometry
-          Position Tolerance: 0.10000000149011612
-          Shape:
-            Alpha: 1
-            Axes Length: 1
-            Axes Radius: 0.10000000149011612
-            Color: 255; 25; 0
-            Head Length: 0.30000001192092896
-            Head Radius: 0.10000000149011612
-            Shaft Length: 1
-            Shaft Radius: 0.05000000074505806
-            Value: Arrow
-          Topic: /defender/odom
-          Unreliable: false
-          Value: false
-      Enabled: true
-      Name: Defender
+      Name: Robot
   Enabled: true
   Global Options:
     Background Color: 0; 0; 0
@@ -528,7 +293,7 @@ Visualization Manager:
     - Class: rviz/FocusCamera
     - Class: rviz/Measure
     - Class: rviz/SetInitialPose
-      Topic: /defender/initialpose
+      Topic: /striker/initialpose
     - Class: rviz/SetGoal
       Topic: /striker/move_base_simple/goal
     - Class: rviz/PublishPoint
@@ -538,7 +303,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 14.989989280700684
+      Distance: 14.814207077026367
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1

@@ -2,6 +2,6 @@
 	<arg name="robot_name" value="striker"/>
 
   	<group ns="$(arg robot_name)">
-        <node pkg="rostu_v2" type="rostu_scan_adj" name="rostu_scan_adj" />
+        <node pkg="rostu_v2" type="rostu_speed_mul" name="rostu_speed_mul" />
 	</group>
 </launch>
